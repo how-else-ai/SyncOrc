@@ -1137,5 +1137,3 @@ A typical stack includes:
 
 This specification is intended to be directly actionable by an automated or human coding agent implementing SyncOrc end to end.
 ```
-
-Sources
