@@ -23,8 +23,9 @@ $files = [
 echo "1. Checking file existence...\n";
 $allFilesExist = true;
 foreach ($files as $file) {
-    if (file_exists($file)) {
-        $size = filesize($file);
+    $filePath = __DIR__ . '/../' . $file;
+    if (file_exists($filePath)) {
+        $size = filesize($filePath);
         echo "   ✓ $file ($size bytes)\n";
     } else {
         echo "   ✗ $file - MISSING\n";
@@ -34,7 +35,7 @@ foreach ($files as $file) {
 
 echo "\n2. Checking class definitions...\n";
 
-require_once 'vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 $classes = [
     'App\Http\Controllers\HealthController',
@@ -60,8 +61,9 @@ foreach ($classes as $class) {
 }
 
 echo "\n3. Checking middleware registration...\n";
-if (file_exists('bootstrap/app.php')) {
-    $content = file_get_contents('bootstrap/app.php');
+$bootstrapPath = __DIR__ . '/../bootstrap/app.php';
+if (file_exists($bootstrapPath)) {
+    $content = file_get_contents($bootstrapPath);
     if (str_contains($content, 'api.auth') && str_contains($content, 'ApiAuthMiddleware')) {
         echo "   ✓ api.auth middleware registered in bootstrap/app.php\n";
     } else {
@@ -72,8 +74,9 @@ if (file_exists('bootstrap/app.php')) {
 }
 
 echo "\n4. Checking API routes definition...\n";
-if (file_exists('routes/api.php')) {
-    $routes = file_get_contents('routes/api.php');
+$routesPath = __DIR__ . '/../routes/api.php';
+if (file_exists($routesPath)) {
+    $routes = file_get_contents($routesPath);
     $expectedRoutes = [
         '/health',
         '/v1/devices/register',
@@ -111,8 +114,9 @@ $placeholderPatterns = ['TODO', 'FIXME', 'XXX', 'PLACEHOLDER'];
 $foundPlaceholders = [];
 
 foreach ($files as $file) {
-    if (file_exists($file)) {
-        $content = file_get_contents($file);
+    $filePath = __DIR__ . '/../' . $file;
+    if (file_exists($filePath)) {
+        $content = file_get_contents($filePath);
         foreach ($placeholderPatterns as $pattern) {
             if (str_contains($content, $pattern)) {
                 $foundPlaceholders[] = "$file: $pattern";

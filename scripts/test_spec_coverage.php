@@ -100,7 +100,7 @@ $specRequirements = [
     ],
 ];
 
-$servicesDir = __DIR__ . '/app/Services';
+$servicesDir = __DIR__ . '/../app/Services';
 $results = [];
 $totalRequired = 0;
 $totalFound = 0;
