@@ -35,4 +35,34 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Push Notification Services
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for Firebase Cloud Messaging (FCM), Apple Push Notification
+    | service (APNs), and Web Push Protocol (VAPID).
+    |
+    */
+
+    'fcm' => [
+        'server_key' => env('FCM_SERVER_KEY'),
+        'project_id' => env('FCM_PROJECT_ID'),
+        'sender_id' => env('FCM_SENDER_ID'),
+    ],
+
+    'apns' => [
+        'bundle_id' => env('APNS_BUNDLE_ID'),
+        'key_id' => env('APNS_KEY_ID'),
+        'team_id' => env('APNS_TEAM_ID'),
+        'private_key' => env('APNS_PRIVATE_KEY'),
+        'production' => env('APNS_PRODUCTION', false),
+    ],
+
+    'web_push' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', 'mailto:admin@syncorc.local'),
+    ],
+
 ];
