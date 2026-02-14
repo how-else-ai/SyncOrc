@@ -55,6 +55,14 @@ class SyncGroup extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Alias for devices() - used in controllers.
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->devices();
+    }
+
     public function groupMembers(): HasMany
     {
         return $this->hasMany(GroupMember::class, 'group_id', 'id');
