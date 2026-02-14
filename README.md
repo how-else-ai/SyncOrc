@@ -13,14 +13,14 @@ SyncOrc is a lightweight, privacy-first synchronization service that enables dev
 
 ## Key Features
 
-- 🔒 **Zero-knowledge architecture** – Sync payloads never touch the service in plaintext.  
+- 🔒 **Zero-knowledge architecture** – Sync payloads never touch the service neither in plaintext nor encrypted.  
 - 🤝 **P2P data transfer** – All sync data flows directly between devices.  
 - 🔔 **Smart notifications** – Push notifications (iOS, Android, Web) for state changes and offline peers.  
 - 🔐 **Secure handshakes** – QR-code based pairing, ECDH key exchange, end-to-end encryption by design.  
 - 🔄 **Flexible topologies** – Pairs (A↔B), chains (A↔B↔C↔…↔N), and groups (all-to-all).  
 - 🛡️ **Loop prevention** – Vector clocks / logical versioning to prevent infinite update loops.  
 - 🧱 **Application-agnostic** – You define the data model and sync protocol on the client side.  
-- 🧊 **Optional encrypted cache** – Store E2E encrypted payloads for offline peers (service cannot decrypt).
+- 🧊 **Optional encrypted cache** – Segregation from payload offline synchronization: Separate services may provide E2E encrypted payloads for offline peers (service cannot decrypt).
 
 ---
 
@@ -62,7 +62,8 @@ SyncOrc coordinates who should talk to whom and when, but never sees the actual 
 - **Local‑first collaboration** – notes, documents, tasks where data stays on devices.  
 - **IoT and edge** – device‑to‑device state sync for smart home and industrial setups.  
 - **Offline‑first apps** – mobile apps that sync when peers or the network become available.  
-- **Privacy‑sensitive domains** – health, finance, personal knowledge bases where central storage is undesirable.  
+- **Privacy‑sensitive domains** – health, finance, personal knowledge bases where central storage is undesirable.
+- **Low infrastructure collaboration** – communities of interest with restricted infrastructure to support colllaboration.   
 
 ---
 
@@ -92,7 +93,7 @@ The reference server is written in PHP/Laravel, but clients can be implemented i
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/syncorc.git
+git clone https://github.com/how-else-ai/syncorc.git
 cd syncorc
 
 # Install PHP dependencies
