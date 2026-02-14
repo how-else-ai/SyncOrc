@@ -2,6 +2,10 @@
 
 namespace Tests\Unit;
 
+use App\Jobs\PushNotificationJob;
+use App\Jobs\SendApnsNotificationJob;
+use App\Jobs\SendFcmNotificationJob;
+use App\Jobs\SendWebPushNotificationJob;
 use App\Services\CacheService;
 use App\Services\DeviceService;
 use App\Services\NotificationService;
@@ -222,5 +226,63 @@ class SpecCoverageTest extends TestCase
         $this->assertStringNotContainsString('O', $code);
         $this->assertStringNotContainsString('1', $code);
         $this->assertStringNotContainsString('0', $code);
+    }
+
+    /**
+     * Test push notification jobs implement required functionality.
+     */
+    public function test_push_notification_jobs_spec_compliance(): void
+    {
+        // Test base job class
+        $this->assertTrue(class_exists(PushNotificationJob::class));
+        $reflectionBase = new \ReflectionClass(PushNotificationJob::class);
+        $this->assertTrue($reflectionBase->hasProperty('tries'));
+        $this->assertTrue($reflectionBase->hasProperty('backoff'));
+        $this->assertTrue($reflectionBase->hasMethod('handle'));
+        $this->assertTrue($reflectionBase->hasMethod('getPushToken'));
+        $this->assertTrue($reflectionBase->hasMethod('logSuccess'));
+        $this->assertTrue($reflectionBase->hasMethod('logFailure'));
+        $this->assertTrue($reflectionBase->hasMethod('failed'));
+
+        // Test FCM job
+        $this->assertTrue(class_exists(SendFcmNotificationJob::class));
+        $reflectionFcm = new \ReflectionClass(SendFcmNotificationJob::class);
+        $this->assertTrue($reflectionFcm->isSubclassOf(PushNotificationJob::class));
+        $this->assertTrue($reflectionFcm->hasMethod('backoff'));
+        $this->assertTrue($reflectionFcm->hasMethod('sendFcmNotification'));
+        $this->assertTrue($reflectionFcm->hasMethod('extractFcmError'));
+        $this->assertTrue($reflectionFcm->hasMethod('isPermanentError'));
+
+        // Test APNs job
+        $this->assertTrue(class_exists(SendApnsNotificationJob::class));
+        $reflectionApns = new \ReflectionClass(SendApnsNotificationJob::class);
+        $this->assertTrue($reflectionApns->isSubclassOf(PushNotificationJob::class));
+        $this->assertTrue($reflectionApns->hasMethod('backoff'));
+        $this->assertTrue($reflectionApns->hasMethod('sendApnsNotification'));
+        $this->assertTrue($reflectionApns->hasMethod('generateApnsJwt'));
+        $this->assertTrue($reflectionApns->hasMethod('extractApnsError'));
+
+        // Test Web Push job
+        $this->assertTrue(class_exists(SendWebPushNotificationJob::class));
+        $reflectionWebPush = new \ReflectionClass(SendWebPushNotificationJob::class);
+        $this->assertTrue($reflectionWebPush->isSubclassOf(PushNotificationJob::class));
+        $this->assertTrue($reflectionWebPush->hasMethod('backoff'));
+        $this->assertTrue($reflectionWebPush->hasMethod('sendWebPushNotification'));
+        $this->assertTrue($reflectionWebPush->hasMethod('generateVapidHeaders'));
+        $this->assertTrue($reflectionWebPush->hasMethod('encryptPayload'));
+    }
+
+    /**
+     * Test push notification job retry configuration matches spec.
+     */
+    public function test_push_notification_retry_strategy(): void
+    {
+        $reflectionBase = new \ReflectionClass(PushNotificationJob::class);
+        $this->assertEquals(3, $reflectionBase->getProperty('tries')->getDefaultValue());
+
+        // All platform jobs should implement backoff for exponential retry
+        $this->assertTrue((new \ReflectionClass(SendFcmNotificationJob::class))->hasMethod('backoff'));
+        $this->assertTrue((new \ReflectionClass(SendApnsNotificationJob::class))->hasMethod('backoff'));
+        $this->assertTrue((new \ReflectionClass(SendWebPushNotificationJob::class))->hasMethod('backoff'));
     }
 }
