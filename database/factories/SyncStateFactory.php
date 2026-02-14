@@ -18,7 +18,7 @@ class SyncStateFactory extends Factory
             'id' => Str::uuid(),
             'group_id' => SyncGroup::factory(),
             'device_id' => Device::factory(),
-            'state_version' => 'v' . fake()->numberBetween(1, 1000),
+            'state_version' => 'v'.fake()->numberBetween(1, 1000),
             'ack_token_hash' => hash('sha256', Str::random(32)),
             'vector_clock' => null,
             'is_acknowledged' => fake()->boolean(),

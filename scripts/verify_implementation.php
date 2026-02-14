@@ -4,7 +4,6 @@
  * Verification Script for Step 3 Implementation
  * Checks that all controllers, middleware, and routes are properly defined
  */
-
 echo "=== SyncOrc Step 3 Implementation Verification ===\n\n";
 
 // Check files exist
@@ -23,7 +22,7 @@ $files = [
 echo "1. Checking file existence...\n";
 $allFilesExist = true;
 foreach ($files as $file) {
-    $filePath = __DIR__ . '/../' . $file;
+    $filePath = __DIR__.'/../'.$file;
     if (file_exists($filePath)) {
         $size = filesize($filePath);
         echo "   ✓ $file ($size bytes)\n";
@@ -35,7 +34,7 @@ foreach ($files as $file) {
 
 echo "\n2. Checking class definitions...\n";
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 $classes = [
     'App\Http\Controllers\HealthController',
@@ -61,7 +60,7 @@ foreach ($classes as $class) {
 }
 
 echo "\n3. Checking middleware registration...\n";
-$bootstrapPath = __DIR__ . '/../bootstrap/app.php';
+$bootstrapPath = __DIR__.'/../bootstrap/app.php';
 if (file_exists($bootstrapPath)) {
     $content = file_get_contents($bootstrapPath);
     if (str_contains($content, 'api.auth') && str_contains($content, 'ApiAuthMiddleware')) {
@@ -74,7 +73,7 @@ if (file_exists($bootstrapPath)) {
 }
 
 echo "\n4. Checking API routes definition...\n";
-$routesPath = __DIR__ . '/../routes/api.php';
+$routesPath = __DIR__.'/../routes/api.php';
 if (file_exists($routesPath)) {
     $routes = file_get_contents($routesPath);
     $expectedRoutes = [
@@ -114,7 +113,7 @@ $placeholderPatterns = ['TODO', 'FIXME', 'XXX', 'PLACEHOLDER'];
 $foundPlaceholders = [];
 
 foreach ($files as $file) {
-    $filePath = __DIR__ . '/../' . $file;
+    $filePath = __DIR__.'/../'.$file;
     if (file_exists($filePath)) {
         $content = file_get_contents($filePath);
         foreach ($placeholderPatterns as $pattern) {
@@ -167,5 +166,5 @@ if ($allChecksPassed && empty($foundPlaceholders)) {
 }
 
 echo "\nTotal: ";
-echo count($files) . " files, ";
-echo count($classes) . " classes, " . count($expectedRoutes) . " routes\n";
+echo count($files).' files, ';
+echo count($classes).' classes, '.count($expectedRoutes)." routes\n";

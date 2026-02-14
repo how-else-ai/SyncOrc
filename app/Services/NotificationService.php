@@ -6,7 +6,6 @@ use App\Models\Device;
 use App\Models\SyncGroup;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class NotificationService
 {
@@ -251,7 +250,6 @@ class NotificationService
      * @param  string  $channel  The channel name
      * @param  string  $event  The event name
      * @param  array<string, mixed>  $data  The data to broadcast
-     * @return void
      */
     protected function broadcast(string $channel, string $event, array $data): void
     {
@@ -272,7 +270,6 @@ class NotificationService
      *
      * @param  Device  $device  The target device
      * @param  array<string, mixed>  $payload  The notification payload
-     * @return void
      */
     protected function queuePushNotification(Device $device, array $payload): void
     {
@@ -338,7 +335,6 @@ class NotificationService
      * Get notification title based on event type.
      *
      * @param  string  $eventType  The event type
-     * @return string
      */
     protected function getNotificationTitle(string $eventType): string
     {
@@ -354,7 +350,6 @@ class NotificationService
      *
      * @param  string  $eventType  The event type
      * @param  array<string, mixed>  $data  The event data
-     * @return string
      */
     protected function getNotificationBody(string $eventType, array $data): string
     {
@@ -374,7 +369,6 @@ class NotificationService
      * @param  Device  $device  The target device
      * @param  array<string, mixed>  $payload  The prepared push payload
      * @param  array<string, mixed>  $data  The original notification data
-     * @return void
      */
     protected function sendPushNotification(Device $device, array $payload, array $data): void
     {

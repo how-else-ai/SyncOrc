@@ -7,14 +7,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Hash;
 
 class Device extends Model
 {
     use HasFactory, HasUuids;
 
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -58,7 +59,7 @@ class Device extends Model
      */
     public static function generateApiToken(): string
     {
-        return 'sync_' . bin2hex(random_bytes(32));
+        return 'sync_'.bin2hex(random_bytes(32));
     }
 
     /**

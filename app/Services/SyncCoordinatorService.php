@@ -5,14 +5,15 @@ namespace App\Services;
 use App\Models\Device;
 use App\Models\SyncGroup;
 use App\Models\SyncState;
-use App\Models\GroupMember;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class SyncCoordinatorService
 {
     protected VectorClockService $vectorClockService;
+
     protected NotificationService $notificationService;
+
     protected DeviceService $deviceService;
 
     public function __construct(
@@ -291,7 +292,6 @@ class SyncCoordinatorService
      *
      * @param  string  $deviceId  The device UUID
      * @param  string  $groupId  The group UUID
-     * @return SyncState|null
      */
     public function getLatestSyncState(string $deviceId, string $groupId): ?SyncState
     {

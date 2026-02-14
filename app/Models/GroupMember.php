@@ -12,8 +12,11 @@ class GroupMember extends Model
     use HasFactory, HasUuids;
 
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     public $timestamps = false;
 
     protected $fillable = [
