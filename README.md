@@ -1,66 +1,379 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SyncOrc
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Privacy-first, application-agnostic device synchronization orchestration service**
 
-## About Laravel
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://www.php.net/)
+[![Laravel](https://img.shields.io/badge/Laravel-11-red)](https://laravel.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-blue)](https://www.postgresql.org/)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+SyncOrc is a lightweight, privacy-first synchronization service that enables devices to coordinate peer‑to‑peer (P2P) data synchronization **without ever exposing payload data to the service**. It acts purely as a signaling and notification layer so devices can discover each other, establish secure connections, and stay aware of sync state changes.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Key Features
 
-## Learning Laravel
+- 🔒 **Zero-knowledge architecture** – Sync payloads never touch the service neither in plaintext nor encrypted.  
+- 🤝 **P2P data transfer** – All sync data flows directly between devices.  
+- 🔔 **Smart notifications** – Push notifications (iOS, Android, Web) for state changes and offline peers.  
+- 🔐 **Secure handshakes** – QR-code based pairing, ECDH key exchange, end-to-end encryption by design.  
+- 🔄 **Flexible topologies** – Pairs (A↔B), chains (A↔B↔C↔…↔N), and groups (all-to-all).  
+- 🛡️ **Loop prevention** – Vector clocks / logical versioning to prevent infinite update loops.  
+- 🧱 **Application-agnostic** – You define the data model and sync protocol on the client side.  
+- 🧊 **Optional encrypted cache** – Segregation from payload offline synchronization: Separate services may provide E2E encrypted payloads for offline peers (service cannot decrypt).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Architecture Overview
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                             SyncOrc                             │
+│                     (Privacy-First Orchestration)               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐  ┌───────────────┐  ┌────────────────────┐    │
+│  │  Handshake   │  │ Sync State    │  │ Push Notification  │    │
+│  │  Manager     │  │ Coordinator   │  │ Gateway            │    │
+│  │  (QR Pairing)│  │ (Loop Prevent)│  │ (FCM/APNs/WebPush) │    │
+│  └──────────────┘  └───────────────┘  └────────────────────┘    │
+│                                                                 │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                 PostgreSQL + Redis Backend                │  │
+│  │  -  Device registry & relationships                       │  │
+│  │  -  Sync state versions (hashed acknowledgments)          │  │
+│  │  -  Optional encrypted cache storage                      │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+           │                    │                    │
+           ▼                    ▼                    ▼
+    ┌───────────┐        ┌───────────┐        ┌───────────┐
+    │  Device A │◄──────►│  Device B │◄──────►│  Device C │
+    │  (Client) │  P2P   │  (Client) │  P2P   │  (Client) │
+    └───────────┘  Data  └───────────┘  Data  └───────────┘
+```
 
-## Laravel Sponsors
+SyncOrc coordinates who should talk to whom and when, but never sees the actual synced content.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## Use Cases
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+- **Local‑first collaboration** – notes, documents, tasks where data stays on devices.  
+- **IoT and edge** – device‑to‑device state sync for smart home and industrial setups.  
+- **Offline‑first apps** – mobile apps that sync when peers or the network become available.  
+- **Privacy‑sensitive domains** – health, finance, personal knowledge bases where central storage is undesirable.
+- **Low infrastructure collaboration** – communities of interest with restricted infrastructure to support colllaboration.   
+
+---
+
+## Technology Stack
+
+- **Backend:** Laravel 11 (PHP 8.2+)  
+- **Database:** PostgreSQL 15+  
+- **Cache / Queue:** Redis 7+  
+- **Real‑time:** Laravel broadcasting (WebSockets)  
+- **Push:** FCM (Android), APNs (iOS), Web Push API (Web/PWA)
+
+The reference server is written in PHP/Laravel, but clients can be implemented in any language.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- PHP 8.2+  
+- Composer 2.x  
+- PostgreSQL 15+  
+- Redis 7+  
+- Node.js 18+ (for optional frontend tooling)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/how-else-ai/syncorc.git
+cd syncorc
+
+# Install PHP dependencies
+composer install
+
+# (Optional) Install JS tooling if you plan to use it
+npm install
+
+# Environment
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit `.env` and configure:
+
+```env
+APP_NAME=SyncOrc
+APP_ENV=local
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=syncorc
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+QUEUE_CONNECTION=redis
+
+# Push notification credentials (fill as needed)
+FCM_SERVER_KEY=
+FCM_SENDER_ID=
+APNS_KEY_ID=
+APNS_TEAM_ID=
+APNS_CERTIFICATE_PATH=
+APNS_ENVIRONMENT=sandbox
+```
+
+Run migrations:
+
+```bash
+php artisan migrate
+```
+
+Start the services:
+
+```bash
+php artisan serve          # HTTP API
+php artisan queue:work     # Background jobs
+php artisan reverb:start   # WebSocket server (or your broadcast server)
+```
+
+SyncOrc will now be available at `http://localhost:8000`.
+
+---
+
+## Core Concepts
+
+### Devices
+
+- Each device registers once and gets:
+  - `device_id` – a UUID used to identify it to SyncOrc.
+  - `api_token` – a bearer token for authenticating API calls.
+- Devices may update their push tokens as they change (e.g., FCM token refresh).
+
+### Groups & Topologies
+
+- **pair** – two devices sync with each other only.  
+- **chain** – devices arranged in order; each device syncs with neighbors.  
+- **group** – all devices sync with all others (full mesh on the client side).
+
+SyncOrc tracks membership and decides which devices to notify when a state change occurs.
+
+### Sync State & Loop Prevention
+
+- Each device maintains its own versioning (vector clocks or similar) and sends a **state version** plus a **hashed acknowledgment token** to SyncOrc.
+- SyncOrc:
+  - Stores the metadata.
+  - Uses vector clock comparisons to avoid redundant or looping updates.
+  - Notifies relevant peers that “you need to sync”, but does not carry the payload.
+
+### Optional Encrypted Cache
+
+- When a peer is offline, a device can upload **E2E encrypted** payloads to the cache:
+  - SyncOrc stores opaque blobs and cannot decrypt them.
+  - The offline device pulls them when it comes back online.
+  - Payloads are bounded by size and TTL.
+
+---
+
+## Example Flows
+
+### 1. Device Registration
+
+```http
+POST /api/v1/devices/register
+Content-Type: application/json
+
+{
+  "public_key": "base64-encoded-public-key",
+  "platform": "ios|android|web",
+  "push_token": "optional-push-token"
+}
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "device_id": "uuid-v4",
+    "api_token": "random-bearer-token",
+    "expires_at": "2026-02-20T22:00:00Z"
+  }
+}
+```
+
+### 2. Pairing via QR Code
+
+On device A:
+
+```http
+POST /api/v1/pairing/initiate
+Authorization: Bearer {api_token}
+Content-Type: application/json
+
+{
+  "device_id": "uuid-device-a",
+  "public_key": "base64-encoded-key"
+}
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "pairing_code": "ABC123",
+    "qr_data": "base64-encoded-json",
+    "expires_in": 300
+  }
+}
+```
+
+Device A displays `qr_data` as a QR code. Device B scans it and calls:
+
+```http
+POST /api/v1/pairing/accept
+Authorization: Bearer {api_token}
+Content-Type: application/json
+
+{
+  "pairing_code": "ABC123",
+  "device_id": "uuid-device-b",
+  "public_key": "base64-encoded-key",
+  "group_type": "pair"
+}
+```
+
+SyncOrc returns group info; both devices derive shared secrets client‑side (ECDH).
+
+### 3. Notifying a State Change
+
+After device A changes local state:
+
+```http
+POST /api/v1/sync/state-changed
+Authorization: Bearer {api_token}
+Content-Type: application/json
+
+{
+  "device_id": "uuid-device-a",
+  "group_id": "uuid-group",
+  "state_version": "v123",
+  "ack_token_hash": "64-char-sha256-hex",
+  "vector_clock": {
+    "uuid-device-a": 5,
+    "uuid-device-b": 3
+  }
+}
+```
+
+SyncOrc stores this and notifies peers via:
+
+- WebSocket (for online devices)
+- Push notifications (for offline devices)
+
+Peers then initiate P2P sync using their own protocol.
+
+---
+
+## Client Responsibilities
+
+SyncOrc deliberately stays “dumb” about your actual data. Clients must:
+
+- Implement end‑to‑end encryption:
+  - Use the exchanged public keys and derive shared secrets.
+  - Encrypt all sync payloads before sending P2P or to the cache.
+- Implement conflict resolution:
+  - CRDTs, OT, or your own merging strategy.
+- Implement P2P connectivity:
+  - WebRTC, direct sockets, local network, or any other channel.
+- Track versions:
+  - Maintain local version clocks and pass them to SyncOrc.
+
+---
+
+## Configuration Highlights
+
+Key `.env` fields:
+
+```env
+APP_NAME=SyncOrc
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://syncorc.example.com
+
+DB_CONNECTION=pgsql
+DB_DATABASE=syncorc
+
+REDIS_HOST=redis
+QUEUE_CONNECTION=redis
+
+# Rate limits
+RATE_LIMIT_PAIRING=5
+RATE_LIMIT_SYNC=1000
+CACHE_TTL_MAX=604800       # 7 days
+CACHE_SIZE_LIMIT=10485760  # 10MB per payload
+```
+
+---
+
+## Development
+
+Run tests:
+
+```bash
+php artisan test
+```
+
+Code style:
+
+```bash
+./vendor/bin/pint
+```
+
+Static analysis (if configured):
+
+```bash
+./vendor/bin/phpstan analyse
+```
+
+---
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
-## Code of Conduct
+- Workflow and branching strategy  
+- Coding and security guidelines  
+- Testing expectations  
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## Security
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+SyncOrc is designed to be:
+
+- **Zero‑knowledge** – the server never sees plaintext sync content.  
+- **SOC 2–friendly** – the security model aligns with common SOC 2 controls (security, availability, confidentiality).
+
+For details or to report a security issue, see [SECURITY_POLICY.md](SECURITY_POLICY.md).
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+SyncOrc is released under the [MIT License](LICENSE).
+```
