@@ -24,6 +24,7 @@ SyncOrc is a fully-implemented, production-ready Laravel service that enables de
 - 🛡️ **Loop prevention** – Vector clocks / logical versioning to prevent infinite update loops.  
 - 🧱 **Application-agnostic** – You define the data model and sync protocol on the client side.  
 - 🧊 **Optional encrypted cache** – Segregation from payload offline synchronization: Separate services may provide E2E encrypted payloads for offline peers (service cannot decrypt).
+- 📚 **[Developer Guide](docs/DEVELOPER_GUIDE.md)** – Comprehensive guide for building client applications.
 
 ---
 
@@ -90,7 +91,7 @@ Development dependencies:
 - `laravel/pint: ^1.13`
 - `fakerphp/faker: ^1.23`
 
-The reference server is implemented in PHP/Laravel, but clients can be built in any language that can consume the REST API and handle the specified authentication scheme.
+The reference server is implemented in PHP/Laravel, but clients can be built in any language that can consume the REST API and handle the specified authentication scheme. See the [Developer Guide](docs/DEVELOPER_GUIDE.md) for comprehensive client implementation guidance.
 
 ---
 
@@ -141,12 +142,22 @@ REDIS_PORT=6379
 QUEUE_CONNECTION=redis
 
 # Push notification credentials (fill as needed)
+# Firebase Cloud Messaging (Android)
 FCM_SERVER_KEY=
+FCM_PROJECT_ID=
 FCM_SENDER_ID=
+
+# Apple Push Notification service (iOS)
+APNS_BUNDLE_ID=
 APNS_KEY_ID=
 APNS_TEAM_ID=
-APNS_CERTIFICATE_PATH=
-APNS_ENVIRONMENT=sandbox
+APNS_PRIVATE_KEY=
+APNS_PRODUCTION=false
+
+# Web Push Protocol
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:admin@syncorc.local
 ```
 
 Run migrations:
@@ -516,6 +527,7 @@ This repository contains a **complete, production-ready implementation** of the 
 
 - ✅ **100% API Coverage** - All endpoints specified in the original design are implemented
 - ✅ **Complete Service Layer** - All 6 core services fully implemented with 100% spec coverage
+- ✅ **Push Notifications** - Full support for FCM (Android), APNs (iOS), and Web Push Protocol
 - ✅ **Comprehensive Testing** - Full test suite with 77 test assertions
 - ✅ **Code Quality** - Type safety, documentation, Laravel best practices
 - ✅ **Database Schema** - Complete migrations and models
@@ -528,6 +540,7 @@ This repository contains a **complete, production-ready implementation** of the 
 - **Zero Errors:** No syntax errors or warnings
 
 ### Documentation
+- `docs/DEVELOPER_GUIDE.md` - **Comprehensive guide for client app developers**
 - `docs/FINAL_REVIEW.md` - Production readiness assessment
 - `docs/SPEC_VERIFICATION.md` - Complete spec compliance verification
 - `docs/TEST_RESULTS.md` - Detailed test results

@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Jobs\SendApnsNotificationJob;
+use App\Jobs\SendFcmNotificationJob;
+use App\Jobs\SendWebPushNotificationJob;
 use App\Models\Device;
 use App\Models\SyncGroup;
 use Illuminate\Broadcasting\Channel;
@@ -268,27 +271,40 @@ class NotificationService
     /**
      * Queue a push notification for a device.
      *
+     * Dispatches the appropriate job based on the device platform.
+     *
      * @param  Device  $device  The target device
      * @param  array<string, mixed>  $payload  The notification payload
      */
     protected function queuePushNotification(Device $device, array $payload): void
     {
-        // Determine platform-specific push payload
+        // Prepare platform-specific push payload
         $pushPayload = $this->preparePushPayload($device, $payload);
 
-        // Queue the push notification job
-        // This would typically dispatch to a PushNotificationJob
-        // For now, we'll use Laravel's queue directly
-        dispatch(function () use ($device, $pushPayload, $payload) {
-            try {
-                $this->sendPushNotification($device, $pushPayload, $payload);
-            } catch (\Exception $e) {
-                Log::error('Failed to send push notification', [
-                    'device_id' => $device->device_id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        })->onQueue('push-notifications');
+        // Dispatch the appropriate job based on platform
+        $job = $this->createPushNotificationJob($device, $pushPayload, $payload);
+
+        if ($job) {
+            dispatch($job);
+        }
+    }
+
+    /**
+     * Create the appropriate push notification job for the device platform.
+     *
+     * @param  Device  $device  The target device
+     * @param  array<string, mixed>  $pushPayload  The prepared push payload
+     * @param  array<string, mixed>  $data  The original notification data
+     * @return \App\Jobs\PushNotificationJob|null
+     */
+    protected function createPushNotificationJob(Device $device, array $pushPayload, array $data): ?\App\Jobs\PushNotificationJob
+    {
+        return match ($device->platform) {
+            'android' => new SendFcmNotificationJob($device, $pushPayload, $data),
+            'ios' => new SendApnsNotificationJob($device, $pushPayload, $data),
+            'web' => new SendWebPushNotificationJob($device, $pushPayload, $data),
+            default => null,
+        };
     }
 
     /**
@@ -358,30 +374,5 @@ class NotificationService
             'signaling_offer' => 'A peer is trying to connect to your device',
             default => 'You have a new SyncOrc notification',
         };
-    }
-
-    /**
-     * Actually send the push notification (placeholder implementation).
-     *
-     * This method would integrate with FCM, APNs, or Web Push providers.
-     * For now, it's a stub that can be implemented later.
-     *
-     * @param  Device  $device  The target device
-     * @param  array<string, mixed>  $payload  The prepared push payload
-     * @param  array<string, mixed>  $data  The original notification data
-     */
-    protected function sendPushNotification(Device $device, array $payload, array $data): void
-    {
-        // TODO: Implement actual push notification sending
-        // This would use:
-        // - FCM for Android devices
-        // - APNs (via Pushok or similar) for iOS devices
-        // - Web Push for web devices
-
-        Log::info('Push notification queued', [
-            'device_id' => $device->device_id,
-            'platform' => $device->platform,
-            'event_type' => $data['type'] ?? 'unknown',
-        ]);
     }
 }
