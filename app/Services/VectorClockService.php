@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\SyncState;
-use Illuminate\Support\Collection;
 
 class VectorClockService
 {
@@ -107,7 +106,6 @@ class VectorClockService
      *
      * @param  array<string, int>  $clock1  First vector clock
      * @param  array<string, int>  $clock2  Second vector clock
-     * @return bool
      */
     public function areEqual(array $clock1, array $clock2): bool
     {

@@ -5,7 +5,6 @@
  * Spec Coverage Test Script
  * Tests that all services implement the required functionality from the spec
  */
-
 $specRequirements = [
     'DeviceService' => [
         'required' => [
@@ -100,7 +99,7 @@ $specRequirements = [
     ],
 ];
 
-$servicesDir = __DIR__ . '/../app/Services';
+$servicesDir = __DIR__.'/../app/Services';
 $results = [];
 $totalRequired = 0;
 $totalFound = 0;
@@ -111,12 +110,13 @@ echo "========================================\n\n";
 
 foreach ($specRequirements as $serviceName => $specs) {
     echo "Testing $serviceName...\n";
-    echo str_repeat('-', 50) . "\n";
+    echo str_repeat('-', 50)."\n";
 
-    $filePath = $servicesDir . '/' . $serviceName . '.php';
+    $filePath = $servicesDir.'/'.$serviceName.'.php';
 
-    if (!file_exists($filePath)) {
+    if (! file_exists($filePath)) {
         echo "  ✗ File not found: $filePath\n\n";
+
         continue;
     }
 
@@ -127,7 +127,7 @@ foreach ($specRequirements as $serviceName => $specs) {
     if (isset($specs['required'])) {
         foreach ($specs['required'] as $method => $description) {
             $totalRequired++;
-            $pattern = '/\bpublic\s+function\s+' . preg_quote($method, '/') . '\s*\(/';
+            $pattern = '/\bpublic\s+function\s+'.preg_quote($method, '/').'\s*\(/';
             if (preg_match($pattern, $content)) {
                 $results[$serviceName]['found'][] = $method;
                 $totalFound++;
@@ -143,7 +143,7 @@ foreach ($specRequirements as $serviceName => $specs) {
     if (isset($specs['supported_events'])) {
         echo "\n  Checking supported events:\n";
         foreach ($specs['supported_events'] as $event) {
-            $pattern = "/['\"]" . preg_quote($event, '/') . "['\"]/";
+            $pattern = "/['\"]".preg_quote($event, '/')."['\"]/";
             if (preg_match($pattern, $content)) {
                 echo "    ✓ $event\n";
             } else {
@@ -156,7 +156,7 @@ foreach ($specRequirements as $serviceName => $specs) {
     if (isset($specs['constants'])) {
         echo "\n  Checking constants:\n";
         foreach ($specs['constants'] as $const => $value) {
-            $pattern = '/const\s+' . preg_quote($const, '/') . '\s*=\s*' . preg_quote($value, '/') . '/';
+            $pattern = '/const\s+'.preg_quote($const, '/').'\s*=\s*'.preg_quote($value, '/').'/';
             if (preg_match($pattern, $content)) {
                 echo "    ✓ $const = $value\n";
             } else {
@@ -169,7 +169,7 @@ foreach ($specRequirements as $serviceName => $specs) {
     if (isset($specs['topologies'])) {
         echo "\n  Checking topology support:\n";
         foreach ($specs['topologies'] as $topology) {
-            $pattern = "/['\"]" . preg_quote($topology, '/') . "['\"]/";
+            $pattern = "/['\"]".preg_quote($topology, '/')."['\"]/";
             if (preg_match($pattern, $content)) {
                 echo "    ✓ $topology\n";
             } else {
@@ -187,11 +187,11 @@ echo "SUMMARY\n";
 echo "========================================\n";
 echo "Total Required Methods: $totalRequired\n";
 echo "Total Found: $totalFound\n";
-echo "Coverage: " . round(($totalFound / $totalRequired) * 100, 2) . "%\n\n";
+echo 'Coverage: '.round(($totalFound / $totalRequired) * 100, 2)."%\n\n";
 
 $missingMethods = [];
 foreach ($results as $service => $data) {
-    if (!empty($data['missing'])) {
+    if (! empty($data['missing'])) {
         $missingMethods[$service] = $data['missing'];
     }
 }

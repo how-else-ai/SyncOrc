@@ -2,12 +2,12 @@
 
 namespace Tests\Unit;
 
-use App\Services\DeviceService;
-use App\Services\PairingService;
-use App\Services\VectorClockService;
-use App\Services\NotificationService;
 use App\Services\CacheService;
+use App\Services\DeviceService;
+use App\Services\NotificationService;
+use App\Services\PairingService;
 use App\Services\SyncCoordinatorService;
+use App\Services\VectorClockService;
 use Tests\TestCase;
 
 class ServicesTest extends TestCase
@@ -30,7 +30,7 @@ class ServicesTest extends TestCase
      */
     public function test_vector_clock_operations(): void
     {
-        $service = new VectorClockService();
+        $service = new VectorClockService;
 
         $clock1 = ['device1' => 1];
         $clock2 = ['device1' => 2, 'device2' => 1];
@@ -51,11 +51,11 @@ class ServicesTest extends TestCase
      */
     public function test_device_token_format(): void
     {
-        $service = new DeviceService();
-        $token = 'sync_' . bin2hex(random_bytes(32));
+        $service = new DeviceService;
+        $token = 'sync_'.bin2hex(random_bytes(32));
 
         $this->assertStringStartsWith('sync_', $token);
-        $this->assertEquals(4 + 64, strlen($token)); // 'sync_' + 64 hex chars
+        $this->assertEquals(5 + 64, strlen($token)); // 'sync_' (5 chars) + 64 hex chars
     }
 
     /**
@@ -63,7 +63,7 @@ class ServicesTest extends TestCase
      */
     public function test_pairing_code_generation(): void
     {
-        $service = new PairingService();
+        $service = new PairingService;
 
         $code1 = $service->generatePairingCode();
         $code2 = $service->generatePairingCode();

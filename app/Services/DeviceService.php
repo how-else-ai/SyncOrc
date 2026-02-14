@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Device;
-use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 
 class DeviceService
@@ -59,7 +58,6 @@ class DeviceService
      *
      * @param  string  $deviceId  The device UUID
      * @param  string  $pushToken  New push notification token
-     * @return Device
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
@@ -77,7 +75,6 @@ class DeviceService
      * Get a device by its device_id.
      *
      * @param  string  $deviceId  The device UUID
-     * @return Device|null
      */
     public function getDevice(string $deviceId): ?Device
     {
@@ -88,7 +85,6 @@ class DeviceService
      * Get a device by its API token (hashed comparison).
      *
      * @param  string  $apiToken  The raw API token
-     * @return Device|null
      */
     public function getDeviceByToken(string $apiToken): ?Device
     {
@@ -99,7 +95,6 @@ class DeviceService
      * Mark a device as currently active (update last_seen_at).
      *
      * @param  string  $deviceId  The device UUID
-     * @return Device|null
      */
     public function markAsActive(string $deviceId): ?Device
     {
@@ -117,7 +112,6 @@ class DeviceService
      * Check if a device is online (based on Redis or last_seen_at).
      *
      * @param  string  $deviceId  The device UUID
-     * @return bool
      */
     public function isOnline(string $deviceId): bool
     {
@@ -143,7 +137,6 @@ class DeviceService
      * Set a device as online in Redis.
      *
      * @param  string  $deviceId  The device UUID
-     * @return void
      */
     public function setOnline(string $deviceId): void
     {
@@ -155,7 +148,6 @@ class DeviceService
      * Set a device as offline in Redis.
      *
      * @param  string  $deviceId  The device UUID
-     * @return void
      */
     public function setOffline(string $deviceId): void
     {
@@ -168,7 +160,6 @@ class DeviceService
      *
      * @param  string  $deviceId  The device UUID
      * @param  string  $apiToken  The raw API token
-     * @return bool
      */
     public function validateToken(string $deviceId, string $apiToken): bool
     {

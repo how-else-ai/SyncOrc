@@ -14,8 +14,11 @@ class SyncGroup extends Model
     use HasFactory, HasUuids;
 
     protected $table = 'sync_groups';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -31,7 +34,9 @@ class SyncGroup extends Model
      * Group type constants.
      */
     public const TYPE_PAIR = 'pair';
+
     public const TYPE_CHAIN = 'chain';
+
     public const TYPE_GROUP = 'group';
 
     /**

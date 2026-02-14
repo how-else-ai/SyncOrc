@@ -23,7 +23,7 @@ class CachedPayloadFactory extends Factory
             'to_device_id' => Device::factory(),
             'group_id' => SyncGroup::factory(),
             'encrypted_data' => $data,
-            'state_version' => 'v' . fake()->numberBetween(1, 1000),
+            'state_version' => 'v'.fake()->numberBetween(1, 1000),
             'size_bytes' => strlen($data),
             'expires_at' => now()->addDays(7),
         ];

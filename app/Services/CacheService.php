@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\CachedPayload;
 use App\Models\Device;
-use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
 
 class CacheService

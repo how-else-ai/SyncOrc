@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\Device;
+use App\Models\GroupMember;
 use App\Models\PairingRequest;
 use App\Models\SyncGroup;
-use App\Models\GroupMember;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
 
@@ -15,7 +15,6 @@ class PairingService
      * Generate a random pairing code.
      *
      * @param  int  $length  Length of the pairing code
-     * @return string
      */
     public function generatePairingCode(int $length = 6): string
     {

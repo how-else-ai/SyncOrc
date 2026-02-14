@@ -2,12 +2,12 @@
 
 namespace Tests\Unit;
 
-use App\Services\DeviceService;
-use App\Services\PairingService;
-use App\Services\VectorClockService;
-use App\Services\NotificationService;
 use App\Services\CacheService;
+use App\Services\DeviceService;
+use App\Services\NotificationService;
+use App\Services\PairingService;
 use App\Services\SyncCoordinatorService;
+use App\Services\VectorClockService;
 use Tests\TestCase;
 
 /**
@@ -21,7 +21,7 @@ class SpecCoverageTest extends TestCase
      */
     public function test_device_service_spec_compliance(): void
     {
-        $service = new DeviceService();
+        $service = new DeviceService;
 
         $this->assertTrue(method_exists($service, 'registerDevice'));
         $this->assertTrue(method_exists($service, 'refreshToken'));
@@ -41,7 +41,7 @@ class SpecCoverageTest extends TestCase
      */
     public function test_pairing_service_spec_compliance(): void
     {
-        $service = new PairingService();
+        $service = new PairingService;
 
         $this->assertTrue(method_exists($service, 'generatePairingCode'));
         $this->assertTrue(method_exists($service, 'initiatePairing'));
@@ -56,7 +56,7 @@ class SpecCoverageTest extends TestCase
      */
     public function test_vector_clock_service_spec_compliance(): void
     {
-        $service = new VectorClockService();
+        $service = new VectorClockService;
 
         $this->assertTrue(method_exists($service, 'initializeClock'));
         $this->assertTrue(method_exists($service, 'incrementClock'));
@@ -91,7 +91,7 @@ class SpecCoverageTest extends TestCase
      */
     public function test_cache_service_spec_compliance(): void
     {
-        $service = new CacheService();
+        $service = new CacheService;
 
         $this->assertTrue(method_exists($service, 'storePayload'));
         $this->assertTrue(method_exists($service, 'retrievePayloads'));
@@ -178,7 +178,7 @@ class SpecCoverageTest extends TestCase
      */
     public function test_vector_clock_spec_behavior(): void
     {
-        $service = new VectorClockService();
+        $service = new VectorClockService;
 
         // Test initialization
         $clock = $service->initializeClock('device-1');
@@ -213,7 +213,7 @@ class SpecCoverageTest extends TestCase
      */
     public function test_pairing_code_format(): void
     {
-        $service = new PairingService();
+        $service = new PairingService;
         $code = $service->generatePairingCode();
 
         $this->assertEquals(6, strlen($code));
