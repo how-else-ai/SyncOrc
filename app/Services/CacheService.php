@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CachedPayload;
 use App\Models\Device;
+use App\Models\SyncGroup;
 use Ramsey\Uuid\Uuid;
 
 class CacheService
@@ -11,17 +12,17 @@ class CacheService
     /**
      * Maximum payload size in bytes (10MB).
      */
-    protected const MAX_PAYLOAD_SIZE = 10485760;
+    public const MAX_PAYLOAD_SIZE = 10485760;
 
     /**
      * Default TTL in seconds (24 hours).
      */
-    protected const DEFAULT_TTL = 86400;
+    public const DEFAULT_TTL = 86400;
 
     /**
      * Maximum TTL in seconds (7 days).
      */
-    protected const MAX_TTL = 604800;
+    public const MAX_TTL = 604800;
 
     /**
      * Store an encrypted payload in the cache.
@@ -48,26 +49,27 @@ class CacheService
 
         // Validate TTL
         if ($ttl > self::MAX_TTL) {
-            throw new \Exception('TTL exceeds maximum allowed value', 400);
+            throw new \InvalidArgumentException('TTL exceeds maximum allowed value');
         }
 
         // Decode payload to check size
         $payloadData = base64_decode($encryptedPayload, true);
 
         if ($payloadData === false) {
-            throw new \Exception('Invalid base64 payload', 400);
+            throw new \InvalidArgumentException('Invalid base64 payload');
         }
 
         $sizeBytes = strlen($payloadData);
 
         // Validate payload size
         if ($sizeBytes > self::MAX_PAYLOAD_SIZE) {
-            throw new \Exception('Payload size exceeds maximum allowed value', 400);
+            throw new \InvalidArgumentException('Payload size exceeds maximum allowed value');
         }
 
         // Find devices
         $fromDevice = Device::where('device_id', $fromDeviceId)->first();
         $toDevice = Device::where('device_id', $toDeviceId)->first();
+        $group = SyncGroup::where('group_id', $groupId)->firstOrFail();
 
         if (! $fromDevice || ! $toDevice) {
             throw new \Exception('Device not found', 404);
@@ -78,7 +80,7 @@ class CacheService
             'cache_id' => Uuid::uuid4()->toString(),
             'from_device_id' => $fromDevice->id,
             'to_device_id' => $toDevice->id,
-            'group_id' => $groupId,
+            'group_id' => $group->id,
             'encrypted_data' => $payloadData, // Store as binary
             'state_version' => $stateVersion,
             'size_bytes' => $sizeBytes,
@@ -113,7 +115,12 @@ class CacheService
             ->orderBy('created_at', 'desc');
 
         if ($groupId) {
-            $query->where('group_id', $groupId);
+            $group = SyncGroup::where('group_id', $groupId)->first();
+            if (! $group) {
+                return collect();
+            }
+
+            $query->where('group_id', $group->id);
         }
 
         $payloads = $query->limit($limit)->get();
@@ -122,7 +129,7 @@ class CacheService
             return [
                 'cache_id' => $payload->cache_id,
                 'from_device_id' => $payload->fromDevice->device_id,
-                'group_id' => $payload->group_id,
+                'group_id' => $payload->group->group_id,
                 'encrypted_payload' => base64_encode($payload->encrypted_data),
                 'state_version' => $payload->state_version,
                 'timestamp' => $payload->created_at->toIso8601String(),
@@ -150,7 +157,7 @@ class CacheService
         return [
             'cache_id' => $payload->cache_id,
             'from_device_id' => $payload->fromDevice->device_id,
-            'group_id' => $payload->group_id,
+            'group_id' => $payload->group->group_id,
             'encrypted_payload' => base64_encode($payload->encrypted_data),
             'state_version' => $payload->state_version,
             'timestamp' => $payload->created_at->toIso8601String(),
@@ -196,7 +203,13 @@ class CacheService
      */
     public function clearGroupCache(string $groupId): int
     {
-        return CachedPayload::where('group_id', $groupId)->delete();
+        $group = SyncGroup::where('group_id', $groupId)->first();
+
+        if (! $group) {
+            return 0;
+        }
+
+        return CachedPayload::where('group_id', $group->id)->delete();
     }
 
     /**
@@ -236,7 +249,13 @@ class CacheService
      */
     public function getGroupCacheSize(string $groupId): int
     {
-        return (int) CachedPayload::where('group_id', $groupId)
+        $group = SyncGroup::where('group_id', $groupId)->first();
+
+        if (! $group) {
+            return 0;
+        }
+
+        return (int) CachedPayload::where('group_id', $group->id)
             ->where('expires_at', '>', now())
             ->sum('size_bytes');
     }

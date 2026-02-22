@@ -76,9 +76,9 @@ class SignalingController extends Controller
 
             // Notify the target device about the signaling offer
             $this->notificationService->notifySignalingOffer(
-                $toDevice->id,
                 $offer->offer_id,
                 $fromDevice->device_id,
+                $toDevice->device_id,
                 $request->input('offer_data')
             );
 
@@ -219,9 +219,9 @@ class SignalingController extends Controller
 
             // Notify the original offer creator about the answer
             $this->notificationService->notifySignalingAnswer(
-                $offer->from_device_id,
                 $offer->offer_id,
                 $device->device_id,
+                $offer->fromDevice->device_id,
                 $request->input('answer_data')
             );
 
