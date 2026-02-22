@@ -96,18 +96,10 @@ class PairingService
             // Find valid pairing request
             $pairingRequest = PairingRequest::where('pairing_code', $pairingCode)
                 ->valid()
-                ->first();
-
-            if (! $pairingRequest) {
-                throw new \Exception('Pairing request not found or expired', 404);
-            }
+                ->firstOrFail();
 
             // Find acceptor device
-            $acceptorDevice = Device::where('device_id', $acceptorDeviceId)->first();
-
-            if (! $acceptorDevice) {
-                throw new \Exception('Acceptor device not found', 404);
-            }
+            $acceptorDevice = Device::where('device_id', $acceptorDeviceId)->firstOrFail();
 
             // Prevent pairing with self
             if ($pairingRequest->initiator_device_id === $acceptorDevice->id) {

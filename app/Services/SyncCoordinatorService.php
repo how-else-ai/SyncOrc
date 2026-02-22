@@ -296,12 +296,13 @@ class SyncCoordinatorService
     public function getLatestSyncState(string $deviceId, string $groupId): ?SyncState
     {
         $device = Device::where('device_id', $deviceId)->first();
+        $group = SyncGroup::where('group_id', $groupId)->first();
 
-        if (! $device) {
+        if (! $device || ! $group) {
             return null;
         }
 
-        return SyncState::where('group_id', $groupId)
+        return SyncState::where('group_id', $group->id)
             ->where('device_id', $device->id)
             ->orderBy('created_at', 'desc')
             ->first();
@@ -327,7 +328,12 @@ class SyncCoordinatorService
             ->orderBy('created_at', 'desc');
 
         if ($groupId) {
-            $query->where('group_id', $groupId);
+            $group = SyncGroup::where('group_id', $groupId)->first();
+            if (! $group) {
+                return collect();
+            }
+
+            $query->where('group_id', $group->id);
         }
 
         return $query->get();

@@ -101,7 +101,7 @@ class SyncController extends Controller
                 'data' => [
                     'notified_devices' => $result['notified_devices'],
                     'online_count' => $result['online_count'],
-                    'push_sent_count' => $result['push_sent_count'],
+                    'push_count' => $result['push_count'],
                 ],
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {

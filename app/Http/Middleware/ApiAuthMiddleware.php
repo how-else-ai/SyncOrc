@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\DeviceService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,7 +28,7 @@ class ApiAuthMiddleware
             ], 401);
         }
 
-        $device = \App\Services\DeviceService::getDeviceByToken($token);
+        $device = app(DeviceService::class)->getDeviceByToken($token);
 
         if (! $device) {
             return response()->json([

@@ -72,10 +72,18 @@ class CacheController extends Controller
                 'success' => true,
                 'data' => [
                     'cache_id' => $result['cache_id'],
-                    'expires_at' => $result['expires_at']->toIso8601String(),
+                    'expires_at' => $result['expires_at'],
                     'size_bytes' => $result['size_bytes'],
                 ],
             ], 201);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'NOT_FOUND',
+                    'message' => 'Group not found',
+                ],
+            ], 404);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
                 'success' => false,

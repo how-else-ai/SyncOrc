@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\DeviceService;
 use App\Services\NotificationService;
 use App\Services\PairingService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -60,13 +61,15 @@ class PairingController extends Controller
                 $request->input('public_key')
             );
 
+            $expiresAt = Carbon::parse($result['expires_at']);
+
             return response()->json([
                 'success' => true,
                 'data' => [
                     'pairing_code' => $result['pairing_code'],
                     'qr_data' => $result['qr_data'],
-                    'expires_in' => $result['expires_at']->diffInSeconds(now()),
-                    'expires_at' => $result['expires_at']->toIso8601String(),
+                    'expires_in' => $expiresAt->diffInSeconds(now()),
+                    'expires_at' => $expiresAt->toIso8601String(),
                 ],
             ], 201);
         } catch (\Exception $e) {
@@ -125,29 +128,23 @@ class PairingController extends Controller
                 $request->input('group_type')
             );
 
-            // Notify the initiator about successful pairing
-            $this->notificationService->notifyPairingAccepted(
-                $result['group']->id,
-                $acceptorDevice->device_id,
-                $request->input('group_type')
-            );
+            $acceptorPosition = collect($result['members'])
+                ->firstWhere('device_id', $acceptorDevice->device_id)['position'] ?? null;
 
-            // Build members list
-            $members = $result['group']->members->map(function ($member) {
-                return [
-                    'device_id' => $member->device_id,
-                    'position' => $member->pivot->position,
-                ];
-            });
+            $this->notificationService->notifyDeviceJoined(
+                $result['group_id'],
+                $acceptorDevice->device_id,
+                $acceptorPosition
+            );
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'group_id' => $result['group']->group_id,
-                    'group_type' => $result['group']->group_type,
-                    'members' => $members,
+                    'group_id' => $result['group_id'],
+                    'group_type' => $result['group_type'],
+                    'members' => $result['members'],
                     'initiator_public_key' => $result['initiator_public_key'],
-                    'acceptor_public_key' => $request->input('public_key'),
+                    'acceptor_public_key' => $result['acceptor_public_key'],
                 ],
             ], 201);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
