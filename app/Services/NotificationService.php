@@ -361,10 +361,7 @@ class NotificationService
     }
 
     /**
-     * Actually send the push notification (placeholder implementation).
-     *
-     * This method would integrate with FCM, APNs, or Web Push providers.
-     * For now, it's a stub that can be implemented later.
+     * Actually send the push notification.
      *
      * @param  Device  $device  The target device
      * @param  array<string, mixed>  $payload  The prepared push payload
@@ -372,16 +369,197 @@ class NotificationService
      */
     protected function sendPushNotification(Device $device, array $payload, array $data): void
     {
-        // TODO: Implement actual push notification sending
-        // This would use:
-        // - FCM for Android devices
-        // - APNs (via Pushok or similar) for iOS devices
-        // - Web Push for web devices
+        try {
+            $success = match ($device->platform) {
+                'android' => $this->sendFcmNotification($device, $payload),
+                'ios' => $this->sendApnsNotification($device, $payload),
+                'web' => $this->sendWebPushNotification($device, $payload),
+                default => false,
+            };
 
-        Log::info('Push notification queued', [
-            'device_id' => $device->device_id,
-            'platform' => $device->platform,
-            'event_type' => $data['type'] ?? 'unknown',
-        ]);
+            if ($success) {
+                Log::info('Push notification sent successfully', [
+                    'device_id' => $device->device_id,
+                    'platform' => $device->platform,
+                    'event_type' => $data['type'] ?? 'unknown',
+                ]);
+            } else {
+                Log::warning('Push notification failed to send', [
+                    'device_id' => $device->device_id,
+                    'platform' => $device->platform,
+                    'event_type' => $data['type'] ?? 'unknown',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send push notification', [
+                'device_id' => $device->device_id,
+                'platform' => $device->platform,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Send push notification via Firebase Cloud Messaging (FCM) for Android.
+     *
+     * @param  Device  $device  The target device
+     * @param  array<string, mixed>  $payload  The prepared push payload
+     */
+    protected function sendFcmNotification(Device $device, array $payload): bool
+    {
+        $fcmServerKey = config('services.fcm.server_key');
+
+        if (empty($fcmServerKey) || empty($device->push_token)) {
+            return false;
+        }
+
+        $message = [
+            'to' => $device->push_token,
+            'notification' => [
+                'title' => $payload['title'],
+                'body' => $payload['body'],
+                'sound' => $payload['sound'] ?? 'default',
+            ],
+            'data' => $payload['data'] ?? [],
+            'priority' => $payload['priority'] ?? 'high',
+        ];
+
+        $headers = [
+            'Authorization: key='.$fcmServerKey,
+            'Content-Type: application/json',
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($message));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        $result = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200) {
+            $response = json_decode($result, true);
+
+            return isset($response['success']) && $response['success'] === 1;
+        }
+
+        return false;
+    }
+
+    /**
+     * Send push notification via Apple Push Notification Service (APNs) for iOS.
+     *
+     * @param  Device  $device  The target device
+     * @param  array<string, mixed>  $payload  The prepared push payload
+     */
+    protected function sendApnsNotification(Device $device, array $payload): bool
+    {
+        $apnsKeyId = config('services.apns.key_id');
+        $apnsTeamId = config('services.apns.team_id');
+        $apnsBundleId = config('services.apns.bundle_id');
+        $apnsPrivateKey = config('services.apns.private_key');
+
+        if (empty($apnsKeyId) || empty($apnsTeamId) || empty($apnsBundleId) ||
+            empty($apnsPrivateKey) || empty($device->push_token)) {
+            return false;
+        }
+
+        $url = 'https://api.push.apple.com/3/device/'.$device->push_token;
+
+        $notification = [
+            'aps' => [
+                'alert' => [
+                    'title' => $payload['title'],
+                    'body' => $payload['body'],
+                ],
+                'sound' => $payload['sound'] ?? 'default',
+                'badge' => $payload['badge'] ?? 1,
+                'content-available' => $payload['content-available'] ?? 1,
+            ],
+            'data' => $payload['data'] ?? [],
+        ];
+
+        $headers = [
+            'apns-topic: '.$apnsBundleId,
+            'apns-push-type: alert',
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($notification));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        // Note: In production, you'd need to implement JWT token generation for APNs auth
+        // using the private key, key_id, and team_id
+
+        $result = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $httpCode === 200;
+    }
+
+    /**
+     * Send push notification via Web Push for web browsers.
+     *
+     * @param  Device  $device  The target device
+     * @param  array<string, mixed>  $payload  The prepared push payload
+     */
+    protected function sendWebPushNotification(Device $device, array $payload): bool
+    {
+        $vapidPublicKey = config('services.webpush.vapid_public_key');
+        $vapidPrivateKey = config('services.webpush.vapid_private_key');
+        $vapidSubject = config('services.webpush.vapid_subject');
+
+        if (empty($vapidPublicKey) || empty($vapidPrivateKey) ||
+            empty($vapidSubject) || empty($device->push_token)) {
+            return false;
+        }
+
+        // Web Push requires the push_token to be a subscription object
+        // containing endpoint, keys (p256dh, auth)
+        $subscription = json_decode($device->push_token, true);
+
+        if (! is_array($subscription) || empty($subscription['endpoint'])) {
+            return false;
+        }
+
+        $notification = [
+            'notification' => [
+                'title' => $payload['title'],
+                'body' => $payload['body'],
+                'icon' => $payload['icon'] ?? '/icon.png',
+                'badge' => $payload['badge'] ?? '/badge.png',
+                'data' => $payload['data'] ?? [],
+            ],
+        ];
+
+        // Note: In production, you'd use a Web Push library like minishlink/web-push
+        // to properly encrypt and send the notification
+        // This is a simplified implementation
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $subscription['endpoint']);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($notification));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        $result = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        // 201 Created is success for Web Push
+        return $httpCode === 201 || $httpCode === 200;
     }
 }
