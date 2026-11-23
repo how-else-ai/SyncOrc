@@ -2,6 +2,8 @@
 
 Laravel-based Synchronization Orchestration Server. Devices announce change **metadata** to the server and fetch actual payloads peer-to-peer — the orchestration server never sees synced content.
 
+**Status:** Minimal viable implementation. Laravel 13, PHP 8.5, SQLite.
+
 ## Design goals
 
 - **Minimal server knowledge**: the server stores change metadata only (entity type/id, change type, SHA-256 content hash, version, optional vector clock, payload location). It never stores or transmits the synced payloads themselves.
@@ -110,6 +112,20 @@ php artisan serve --port=8099
 ```
 
 Database: `database/database.sqlite` (SQLite, file-based — zero config).
+
+## Testing
+
+```bash
+vendor/bin/phpunit
+```
+
+28 tests pass (23 feature + 5 unit, 69 assertions).
+
+## Requirements
+
+- PHP 8.5+
+- Composer
+- SQLite (pdo_sqlite extension)
 
 ## Verified flows
 

@@ -1,47 +1,58 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# SyncOrc — Agent Context
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+This is a minimal Laravel-based Synchronization Orchestration Server. Devices announce change **metadata** to the server and fetch actual payloads peer-to-peer — the orchestration server never sees synced content.
 
-## Prerequisites
+## Domain model
 
-Verify that PHP and Composer are available:
+| Model | Table | Key fields |
+|-------|-------|-----------|
+| `App\Models\Device` | `devices` | `id` (uuid, string key), `api_token` (sync token, hidden), `public_key`, `capabilities` (array cast), `last_sync_at` |
+| `App\Models\ChangeEntry` | `change_entries` | `id` (uuid), `device_id` (FK), `entity_type`, `entity_id`, `change_type` (create/update/delete), `content_hash` (SHA-256 hex), `version`, `vector_clock` (array cast), `payload_location` |
+| `App\Models\SyncCursor` | `sync_cursors` | `device_id` (FK, PK), `last_synced_at` |
 
-```sh
-php -v
-composer -V
-```
+All models use UUID primary keys: `$keyType = 'string'; public $incrementing = false;` with a `creating` boot hook that assigns `(string) Str::uuid()`.
 
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
+## API conventions
 
-macOS:
+Base path: `/api`
 
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
+| Endpoint | Method | Auth | Purpose |
+|----------|--------|------|---------|
+| `/devices` | POST | none | Register device → returns `device_id` + `sync_token` |
+| `/devices/me` | GET | Bearer token | Authenticated device profile (api_token hidden) |
+| `/sync/announce` | POST | Bearer token | Announce change metadata (validated: content_hash 64 hex, change_type enum) |
+| `/sync/changes` | GET | Bearer token | Poll changes from other devices since cursor; `?limit=` |
+| `/sync/ack` | POST | Bearer token | Advance sync cursor via `last_change_id` |
 
-Windows PowerShell:
+Authentication: `App\Http\Middleware\EnsureDeviceToken` reads `$request->bearerToken()`, looks up `Device` by `api_token`, attaches via `$request->attributes->set('sync_device', $device)`. Controllers retrieve with `$request->attributes->get('sync_device')`.
 
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
+Routes are in `routes/api.php` and registered in `bootstrap/app.php` via `api: __DIR__.'/../routes/api.php'` (Laravel 13 requires this explicit mapping).
 
-Linux:
+## Test conventions
 
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
+- Feature tests: `tests/Feature/` — extend `Tests\TestCase`, use `RefreshDatabase` (in-memory SQLite), methods prefixed with `test_`
+- Unit tests: `tests/Unit/` — extend `Tests\TestCase`, use `RefreshDatabase` when touching the DB
+- Run: `vendor/bin/phpunit` (28 tests, 69 assertions, all passing)
 
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
+## Common tasks
 
-## Agent Setup
+**Add a new sync endpoint:**
+1. Create controller in `app/Http/Controllers/`
+2. Add route in `routes/api.php` inside the `EnsureDeviceToken` middleware group
+3. Add feature test in `tests/Feature/`
+4. Run `vendor/bin/phpunit`
 
-Install Laravel Boost from the application root before making application changes:
+**Modify a model:**
+1. Edit the model class in `app/Models/`
+2. Create a migration via `php artisan make:migration`
+3. Run `php artisan migrate`
+4. Update any affected tests
 
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
+**Device-side client:**
+`app/Sync/SyncClient.php` — register/announce/poll/ack/sync round-trip example.
 
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+## Requirements
+
+- PHP 8.5+
+- Composer
+- SQLite (pdo_sqlite)
